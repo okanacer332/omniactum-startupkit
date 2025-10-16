@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+// 1. GEREKLİ HOOK'LARI IMPORT ET
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useParams } from "next/navigation";
+import { useTranslation } from "@/lib/i18n-client";
+
 import { apiFetchAuth } from "@/lib/api-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +27,11 @@ const themeSchema = z.object({
 type ThemeFormValues = z.infer<typeof themeSchema>;
 
 export default function ThemeSettingsPage() {
+  // 2. YÜKLEME VE ÇEVİRİ HOOK'LARINI EKLE
+  const [isLoading, setIsLoading] = useState(true);
+  const { lng } = useParams() as { lng: string };
+  const { t, ready } = useTranslation(lng, 'common');
+
   const { control, handleSubmit, reset, formState: { isSubmitting, isDirty } } = useForm<ThemeFormValues>({
     resolver: zodResolver(themeSchema),
     defaultValues: {
@@ -33,14 +42,23 @@ export default function ThemeSettingsPage() {
     },
   });
 
+  // 3. useEffect'i GÜNCELLE (sadece 'ready' olunca çalışsın)
   useEffect(() => {
-    // Sayfa yüklendiğinde mevcut ayarları çek
+    if (!ready) return;
+
+    setIsLoading(true);
     apiFetchAuth("/api/settings/theme")
       .then(res => res.json())
       .then(data => {
-        reset(data); // Formu gelen verilerle güncelle
+        reset(data);
+      })
+      .catch(() => {
+        toast.error(t("themeSettings.toast.errorTitle"), { description: t("themeSettings.toast.errorDescription") });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  }, [reset]);
+  }, [reset, ready, t]);
 
   const onSubmit = async (data: ThemeFormValues) => {
     try {
@@ -48,37 +66,63 @@ export default function ThemeSettingsPage() {
         method: "PUT",
         body: JSON.stringify(data),
       });
-      toast.success("Tema renkleri başarıyla güncellendi.");
-      // Canlı önizleme için sayfayı yenilemeye zorlayabiliriz
+      // 4. TOAST MESAJLARINI ÇEVİR
+      toast.success(t("themeSettings.toast.success"));
       window.location.reload();
     } catch (error: any) {
-      toast.error("Bir hata oluştu.", { description: error.message });
+      toast.error(t("themeSettings.toast.errorTitle"), { description: t("themeSettings.toast.errorDescription") });
     }
   };
 
+  // 5. YÜKLENİYORSA VEYA ÇEVİRİ HAZIR DEĞİLSE SKELETON GÖSTER
+  if (isLoading || !ready) {
+    return (
+        <div className="space-y-6">
+            <div>
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="mt-2 h-5 w-2/3" />
+            </div>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-7 w-1/4" />
+                    <Skeleton className="mt-2 h-5 w-full" />
+                </CardHeader>
+                <CardContent className="space-y-8">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-9 w-32" />
+                </CardContent>
+            </Card>
+        </div>
+    );
+  }
+
+  // 6. TÜM METİNLERİ t() FONKSİYONU İLE DEĞİŞTİR
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tema Renkleri</h1>
-        <p className="text-muted-foreground">Sistem genelindeki ana renk paletini buradan yönetebilirsiniz.</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("themeSettings.page.title")}</h1>
+        <p className="text-muted-foreground">{t("themeSettings.page.description")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Renk Ayarları</CardTitle>
+          <CardTitle>{t("themeSettings.card.title")}</CardTitle>
           <CardDescription>
-            Değişiklikler kaydedildikten sonra tüm kullanıcılar için geçerli olacaktır.
+            {t("themeSettings.card.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <ColorInput name="dashboardBackground" label="Dashboard Arka Plan Rengi" control={control} />
-            <ColorInput name="primaryButton" label="Ana Buton Rengi (Kaydet, Giriş)" control={control} />
-            <ColorInput name="destructiveButton" label="İptal/Sil Butonu Rengi" control={control} />
-            <ColorInput name="sidebarBackground" label="Menü Arka Plan Rengi" control={control} />
+            <ColorInput name="dashboardBackground" label={t("themeSettings.form.dashboardBackground")} control={control} />
+            <ColorInput name="primaryButton" label={t("themeSettings.form.primaryButton")} control={control} />
+            <ColorInput name="destructiveButton" label={t("themeSettings.form.destructiveButton")} control={control} />
+            <ColorInput name="sidebarBackground" label={t("themeSettings.form.sidebarBackground")} control={control} />
 
             <Button type="submit" disabled={isSubmitting || !isDirty}>
-              {isSubmitting ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+              {isSubmitting ? t("themeSettings.form.savingButton") : t("themeSettings.form.saveButton")}
             </Button>
           </form>
         </CardContent>
@@ -87,7 +131,7 @@ export default function ThemeSettingsPage() {
   );
 }
 
-// Tekrarı önlemek için yardımcı bileşen
+// Bu yardımcı bileşen aynı kalabilir.
 const ColorInput = ({ name, label, control }: { name: keyof ThemeFormValues, label: string, control: any }) => (
   <Controller
     name={name}
