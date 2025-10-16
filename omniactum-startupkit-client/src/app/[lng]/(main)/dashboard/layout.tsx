@@ -22,12 +22,10 @@ import {
   type ContentLayout,
 } from "@/types/preferences/layout";
 import { AccountSwitcher } from "./_components/sidebar/account-switcher";
-// İTHALAT KALDIRILDI: SearchDialog artık kullanılmıyor.
-// import { SearchDialog } from "./_components/sidebar/search-dialog"; 
 import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 import { LanguageSwitcher } from "@/components/language-switcher"; 
 import { SidebarInitializer } from "./_components/sidebar-initializer"; 
-import { ThemeApplicator } from "@/components/theme-applicator";
+// 1. ThemeApplicator IMPORT'U KALDIRILDI
 
 // TİP TANIMI: Next.js'in beklediği parametre yapısını yansıtıyoruz
 type LayoutParams = {
@@ -43,8 +41,6 @@ export default async function Layout({ children, params }: Readonly<LayoutParams
   const lng = params.lng; 
 
   const cookieStore = await cookies();
-  // defaultOpen değeri artık geçilmiyor. SidebarInitializer ilk durumu yönetecek.
-  // const defaultOpen = cookieStore.get("sidebar_state")?.value === "true"; // Bu satır artık kullanılmayacak
 
   const [sidebarVariant, sidebarCollapsible, contentLayout] = await Promise.all([
     getPreference<SidebarVariant>("sidebar_variant", SIDEBAR_VARIANT_VALUES, "inset"),
@@ -53,9 +49,8 @@ export default async function Layout({ children, params }: Readonly<LayoutParams
   ]);
 
   return (
-    // defaultOpen değeri artık geçilmiyor. SidebarInitializer ilk durumu yönetecek.
     <SidebarProvider> 
-      <ThemeApplicator />
+      {/* 2. <ThemeApplicator /> SATIRI BURADAN KALDIRILDI */}
       <SidebarInitializer />
       <AuthGuard />
       <AppSidebar 
@@ -75,9 +70,6 @@ export default async function Layout({ children, params }: Readonly<LayoutParams
           <div className="flex w-full items-center justify-between px-4 lg:px-6">
             <div className="flex items-center gap-1 lg:gap-2">
               <SidebarTrigger className="-ml-1" />
-              {/* KRİTİK DEĞİŞİKLİK: SearchDialog ve ayırıcıları kaldırıldı */}
-              {/* <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" /> */}
-              {/* <SearchDialog /> */}
             </div>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />

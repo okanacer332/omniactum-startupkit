@@ -11,6 +11,8 @@ import { APP_CONFIG } from "@/config/app-config";
 import { getPreference } from "@/server/server-actions";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 import { THEME_MODE_VALUES, THEME_PRESET_VALUES, type ThemePreset, type ThemeMode } from "@/types/preferences/theme";
+// 1. ThemeApplicator'ı import et
+import { ThemeApplicator } from "@/components/theme-applicator";
 
 import "./globals.css";
 
@@ -45,6 +47,8 @@ export default async function RootLayout({
     >
       <body className={`${inter.className} min-h-screen antialiased`}>
         <PreferencesStoreProvider themeMode={themeMode} themePreset={themePreset}>
+          {/* 2. BURAYA EKLE */}
+          <ThemeApplicator />
           {children}
           <Toaster />
         </PreferencesStoreProvider>

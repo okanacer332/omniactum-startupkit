@@ -1,8 +1,10 @@
 // src/app/[lng]/(main)/dashboard/_components/sidebar/nav-main.tsx
 "use client";
 
+// 1. GEREKLİ HOOK'LARI IMPORT ET
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
 import { type NavGroup } from "@/navigation/sidebar/sidebar-items";
 import { useSidebar } from "@/components/ui/sidebar";
 import {
@@ -23,7 +25,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
-import { useTranslation } from "@/lib/i18n-client"; 
+import { useTranslation } from "@/lib/i18n-client";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
@@ -32,9 +34,19 @@ interface NavMainProps {
 
 export function NavMain({ items, lng }: NavMainProps) {
   const path = usePathname();
-  const { t } = useTranslation(lng, 'common');
+  // 2. ÇEVİRİ HOOK'UNDAN 'READY' DEĞERİNİ AL
+  const { t, ready } = useTranslation(lng, 'common');
   const { state, isMobile, setOpenMobile } = useSidebar();
   const { permissions: userPermissions } = useAuthStore();
+
+  // 3. BİLEŞENİN CLIENT'TA YÜKLENİP YÜKLENMEDİĞİNİ TAKİP ET
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 4. BİLEŞEN İLK YÜKLENDİĞİNDE STATE'İ GÜNCELLE
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
 
   const pathWithoutLng = path.replace(`/${lng}`, "") || "/";
 
@@ -44,24 +56,28 @@ export function NavMain({ items, lng }: NavMainProps) {
     }
   };
 
-  // FİLTRELEME MANTIĞI GÜNCELLENDİ
   const filteredItems = items.map(group => ({
     ...group,
     items: group.items.map(item => ({
       ...item,
-      // Alt menüleri kendi izinlerine göre filtrele
       subItems: item.subItems?.filter(subItem => 
         !subItem.permission || userPermissions.has(subItem.permission)
       ),
     })).filter(item => {
-      // Eğer bir öğenin alt menüsü yoksa (direkt link ise), kendi iznini kontrol et
       if (!item.subItems) {
         return !item.permission || userPermissions.has(item.permission);
       }
-      // Eğer alt menüleri varsa (accordion ise), sadece gösterilecek alt menüsü varsa göster
       return item.subItems.length > 0;
     }),
   })).filter(group => group.items.length > 0);
+
+  // 5. HYDRATION HATASINI ÖNLEMEK İÇİN KONTROL EKLE
+  // Sadece client'ta ve çeviriler hazır olduğunda render et
+  if (!isMounted || !ready) {
+    // Bu, sunucu ve istemci arasında fark oluşmasını engeller.
+    // Daha iyi bir kullanıcı deneyimi için buraya bir iskelet (skeleton) bileşeni de eklenebilir.
+    return null;
+  }
 
   if (state === "collapsed" && !isMobile) {
     return <CollapsedNav items={filteredItems} lng={lng} t={t} />;
