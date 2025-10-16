@@ -5,6 +5,7 @@ import {
   UserCog,
   ShieldCheck,
   FileClock,
+  Palette, // Palette ikonunu ekleyin
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,6 +21,7 @@ export interface NavMainItem {
   url: string;
   icon?: LucideIcon;
   subItems?: NavSubItem[];
+  permission?: string; // Ana menü öğesi için de yetki tanımı
 }
 
 export interface NavGroup {
@@ -53,6 +55,19 @@ export const sidebarItems: NavGroup[] = [
           { title: "sidebar.modules.roleManagement", url: "/dashboard/iam/roles", icon: ShieldCheck, permission: "PAGE_ROLES:READ" },
           { title: "sidebar.modules.auditLogs", url: "/dashboard/audit/logs", icon: FileClock, permission: "PAGE_LOGS:READ" },
         ],
+      },
+    ],
+  },
+  {
+    id: 3,
+    label: "sidebar.modules.siteSettings",
+    items: [
+      {
+        title: "sidebar.modules.themeColors",
+        url: "/dashboard/settings/theme",
+        icon: Palette,
+        permission: "PAGE_THEME_SETTINGS:WRITE", // Sadece yazma yetkisi olan görsün
+        // subItems: [] propertysini kaldırıyoruz çünkü bu bir direkt link
       },
     ],
   },

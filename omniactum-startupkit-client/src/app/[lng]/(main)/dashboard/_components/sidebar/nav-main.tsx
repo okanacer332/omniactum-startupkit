@@ -25,37 +25,41 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { useTranslation } from "@/lib/i18n-client"; 
 
-// DEĞİŞİKLİK BURADA: 'lng' prop'unu ekliyoruz
 interface NavMainProps {
   readonly items: readonly NavGroup[];
   lng: string;
 }
 
-export function NavMain({ items, lng }: NavMainProps) { // 'lng' artık prop'tan geliyor
+export function NavMain({ items, lng }: NavMainProps) {
   const path = usePathname();
-  // 'useParams' artık gerekli değil
   const { t } = useTranslation(lng, 'common');
   const { state, isMobile, setOpenMobile } = useSidebar();
   const { permissions: userPermissions } = useAuthStore();
 
   const pathWithoutLng = path.replace(`/${lng}`, "") || "/";
 
-  // ... (handleLinkClick ve filteredItems aynı kalıyor) ...
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);
     }
   };
 
+  // FİLTRELEME MANTIĞI GÜNCELLENDİ
   const filteredItems = items.map(group => ({
     ...group,
     items: group.items.map(item => ({
       ...item,
+      // Alt menüleri kendi izinlerine göre filtrele
       subItems: item.subItems?.filter(subItem => 
         !subItem.permission || userPermissions.has(subItem.permission)
       ),
     })).filter(item => {
-      return !item.subItems || item.subItems.length > 0;
+      // Eğer bir öğenin alt menüsü yoksa (direkt link ise), kendi iznini kontrol et
+      if (!item.subItems) {
+        return !item.permission || userPermissions.has(item.permission);
+      }
+      // Eğer alt menüleri varsa (accordion ise), sadece gösterilecek alt menüsü varsa göster
+      return item.subItems.length > 0;
     }),
   })).filter(group => group.items.length > 0);
 
@@ -74,7 +78,6 @@ export function NavMain({ items, lng }: NavMainProps) { // 'lng' artık prop'tan
     return "";
   };
 
-  // ... (JSX içeriği aynı, sadece t() fonksiyonunu kullanıyor)
   return (
     <>
       {filteredItems.map((group) => (

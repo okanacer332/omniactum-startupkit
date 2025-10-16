@@ -27,6 +27,7 @@ import { AccountSwitcher } from "./_components/sidebar/account-switcher";
 import { ThemeSwitcher } from "./_components/sidebar/theme-switcher";
 import { LanguageSwitcher } from "@/components/language-switcher"; 
 import { SidebarInitializer } from "./_components/sidebar-initializer"; 
+import { ThemeApplicator } from "@/components/theme-applicator";
 
 // TİP TANIMI: Next.js'in beklediği parametre yapısını yansıtıyoruz
 type LayoutParams = {
@@ -54,6 +55,7 @@ export default async function Layout({ children, params }: Readonly<LayoutParams
   return (
     // defaultOpen değeri artık geçilmiyor. SidebarInitializer ilk durumu yönetecek.
     <SidebarProvider> 
+      <ThemeApplicator />
       <SidebarInitializer />
       <AuthGuard />
       <AppSidebar 

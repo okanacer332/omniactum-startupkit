@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Yüklenen dosyalara (avatarlar) GET isteğiyle gelen herkese izin ver.
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        // YENİ EKLENDİ: Tema ayarlarını herkesin okuyabilmesine izin ver.
+                        .requestMatchers(HttpMethod.GET, "/api/settings/theme").permitAll()
                         // Geriye kalan tüm istekler için kimlik doğrulaması iste.
                         .anyRequest().authenticated()
                 )
@@ -50,15 +52,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // *** ANA DEĞİŞİKLİK BURADA ***
-        // "*" yerine, frontend'inizin çalıştığı adresleri açıkça belirtin.
-        // Müşterinizin IP'sini veya alan adını da buraya ekleyebilirsiniz.
         configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://213.74.252.238:7777"));
-
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true); // Artık bu satır sorun yaratmayacak.
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -70,3 +67,4 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 }
+

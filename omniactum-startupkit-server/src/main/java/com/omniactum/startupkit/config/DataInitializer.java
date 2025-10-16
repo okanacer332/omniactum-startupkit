@@ -6,16 +6,16 @@ import com.omniactum.startupkit.modules.iam.repository.RoleRepository;
 import com.omniactum.startupkit.modules.iam.repository.UserRepository;
 import com.omniactum.startupkit.modules.iam.service.PermissionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationListener; // <-- DEĞİŞTİ
-import org.springframework.context.event.ContextRefreshedEvent; // <-- DEĞİŞTİ
-import org.springframework.core.annotation.Order; // <-- YENİ IMPORT
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
 @Component
-@Order(1) // <-- BU ÇOK ÖNEMLİ! İKİNCİ ÇALIŞACAK OLAN BU.
+@Order(1)
 @RequiredArgsConstructor
 public class DataInitializer implements ApplicationListener<ContextRefreshedEvent> {
 
@@ -29,6 +29,9 @@ public class DataInitializer implements ApplicationListener<ContextRefreshedEven
         // ADMIN rolü yoksa oluştur
         roleRepository.findByName("ADMIN").orElseGet(() -> {
             Role newAdminRole = new Role("ADMIN");
+
+            // 1. Sistemdeki @HasPermission ile işaretlenmiş TÜM yetkileri alır.
+            // Bu, "PAGE_THEME_SETTINGS:WRITE" yetkisini de otomatik olarak içerecektir.
             Set<String> allPermissions = permissionService.getSystemPermissions();
 
             if (allPermissions.isEmpty()) {
@@ -37,6 +40,7 @@ public class DataInitializer implements ApplicationListener<ContextRefreshedEven
                 System.out.println(">>> 'ADMIN' rolüne " + allPermissions.size() + " adet yetki ekleniyor.");
             }
 
+            // 2. Bulunan tüm yetkileri yeni 'ADMIN' rolüne atar.
             newAdminRole.setPermissions(allPermissions);
             Role adminRole = roleRepository.save(newAdminRole);
             System.out.println(">>> Varsayılan 'ADMIN' rolü tüm yetkilerle oluşturuldu.");
