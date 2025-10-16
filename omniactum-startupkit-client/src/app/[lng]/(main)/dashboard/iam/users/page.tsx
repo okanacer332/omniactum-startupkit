@@ -34,7 +34,6 @@ export default function UsersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
-  // YENİ STATE: Sadece silme diyalogunu yönetir.
   const [userToDelete, setUserToDelete] = useState<User | null>(null); 
   
   const { lng } = useParams() as { lng: string };
@@ -46,7 +45,7 @@ export default function UsersPage() {
       const res = await apiFetchAuth("/api/iam/users");
       const data = await res.json();
       setUsers(data);
-    } catch (error: any) { // KRİTİK DÜZELTME: Hata tipini 'any' olarak zorladık
+    } catch (error: any) {
       toast.error(t("iam.user.toast.fetchError"));
     } finally {
       setIsLoading(false);
@@ -71,7 +70,6 @@ export default function UsersPage() {
     setIsEditDialogOpen(true);
   };
   
-  // YENİ FONKSİYON: Silme diyalogunu açar.
   const openDeleteDialog = (user: User) => {
     setUserToDelete(user);
   }
@@ -82,14 +80,13 @@ export default function UsersPage() {
       await apiFetchAuth(`/api/iam/users/${userId}`, { method: 'DELETE' });
       toast.success(t("iam.user.toast.deleteSuccess"));
       fetchUsers();
-    } catch (error: any) { // KRİTİK DÜZELTME: Hata tipini 'any' olarak zorladık
+    } catch (error: any) {
       toast.error(t("iam.user.toast.deleteFailed"), { description: error.message });
     } finally {
       setUserToDelete(null); 
     }
   };
 
-  // Avatar kolonu, page.tsx'in içinden taşınmış olmalıydı, bu nedenle bu kısmı page.tsx'e geri getirelim
   const AvatarColumn: ColumnDef<User> = {
     id: "avatar",
     header: "", 
@@ -116,7 +113,8 @@ export default function UsersPage() {
       </AlertDialogHeader>
       <AlertDialogFooter>
         <AlertDialogCancel>{t('iam.user.cancelButton')}</AlertDialogCancel>
-        <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>{t('iam.user.deleteButton')}</AlertDialogAction>
+        {/* DEĞİŞİKLİK BURADA: variant="destructive" eklendi */}
+        <AlertDialogAction variant="destructive" onClick={() => handleDeleteUser(user.id)}>{t('iam.user.deleteButton')}</AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   );
@@ -125,7 +123,7 @@ export default function UsersPage() {
     openEditDialog: openEditDialog, 
     openDeleteDialog: openDeleteDialog, 
     t: t 
-  })], [t]);
+  })], [t, openEditDialog, openDeleteDialog]); // Bağımlılıkları ekledim
 
   const table = useDataTableInstance({ data: users, columns });
 
@@ -168,7 +166,6 @@ export default function UsersPage() {
       
       <DataTablePagination table={table} />
 
-      {/* KRİTİK DÜZELTME: Kullanıcı Düzenleme Diyaloğu (selectedUser var VE düzenleme açık) */}
       {selectedUser && isEditDialogOpen && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
@@ -181,7 +178,6 @@ export default function UsersPage() {
         </Dialog>
       )}
 
-      {/* KRİTİK DÜZELTME: Silme Onayı Diyaloğu (Sadece userToDelete varsa açılır) */}
       {userToDelete && (
         <AlertDialog open={true} onOpenChange={() => setUserToDelete(null)}>
           {DeleteConfirmationDialog({ user: userToDelete })}

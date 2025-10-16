@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui"
+// 1. GEREKLİ TİPİ IMPORT ET
+import { type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -118,13 +120,15 @@ function AlertDialogDescription({
   )
 }
 
+// 2. AlertDialogAction BİLEŞENİNİ GÜNCELLE
 function AlertDialogAction({
   className,
+  variant, // variant'ı props'tan al
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action> & VariantProps<typeof buttonVariants>) { // Tipleri birleştir
   return (
     <AlertDialogPrimitive.Action
-      className={cn(buttonVariants(), className)}
+      className={cn(buttonVariants({ variant }), className)} // variant'ı buttonVariants'a ilet
       {...props}
     />
   )
